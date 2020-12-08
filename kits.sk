@@ -1,0 +1,8 @@
+options:
+  prefix: &3&lCORD&B&LMC &7»
+  discord: discord.cordmc.net
+
+
+on chat:
+  cancel event
+  set chat format to "&8[&b%{level::%uuid of player%}%&8] %player's prefix% %player% &7» &f%message%"
