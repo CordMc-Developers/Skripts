@@ -9,3 +9,28 @@ on join:
 
 on chat:
   set chat format to "&8[&b%{level::%uuid of player%}%&8] %player's prefix%&7%player% %player's suffix% &8» &f%message%"
+
+
+
+on death:
+  if victim is a player:
+    if attacker is a player:
+      add 1 to {kills::%uuid of attacker%}
+      add 1 to {deaths::%uuid of victim%}
+      set {exp} to random integer between 0.5 and 10
+      set {cash} to random integer between 0.5 and 5
+      add {exp} to {exp::%uuid of attacker%}
+      add {cash} to {cash::%uuid of attacker%}
+      remove {cash} from {cash::%uuid of victim%}
+      remove {exp} from {exp::%uuid of victim%}
+      set attacker's health to attacker's health+3
+      send " " to attacker
+      send "You've killed &c&n%victim% and gained: " to attacker
+      send "Exp: &c%{exp}%" to attacker
+      send "Cash: &c%{cash}%" to attacker
+      send " " to attacker
+      send " " to victim
+      send "You got killed by &c&n%attacker% and lost: " to victim
+      send "Exp: &c%{exp}%" to victim
+      send "Cash: &c%{cash}%" to victim
+      send " " to victim
