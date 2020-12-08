@@ -3,6 +3,9 @@ options:
   discord: discord.cordmc.net
 
 
+on join:
+  if {level::%uuid of player%} is not set:
+    set {level::%uuid of player%} to 0
+
 on chat:
-  cancel event
-  set chat format to "&8[&b%{level::%uuid of player%}%&8] %player's prefix% %player% &7» &f%message%"
+  set chat format to "&8[&b%{level::%uuid of player%}%&8] %player's prefix%&7%player% %player's suffix% &8» &f%message%"
