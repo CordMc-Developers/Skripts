@@ -1,36 +1,118 @@
-options:
-  prefix: &3&lCORD&B&LMC &7»
-  discord: discord.cordmc.net
+#FUNCTION#
+function newkit(p: player, t: text):
+  send {_p} title "&2&lKIT UNLOCKED!" with subtitle "&f%{_t}%"
 
 
-on join:
-  if {level::%uuid of player%} is not set:
-    set {level::%uuid of player%} to 0
+# VILLAGER NPC #
 
-on chat:
-  set chat format to "&8[&b%{level::%uuid of player%}%&8] %player's prefix%&7%player% %player's suffix% &8» &f%message%"
-
+on right click on npc:
+  npc is 0
+  make player execute "kits"
 
 
-on death:
-  if victim is a player:
-    if attacker is a player:
-      add 1 to {kills::%uuid of attacker%}
-      add 1 to {deaths::%uuid of victim%}
-      set {exp} to random integer between 0.5 and 10
-      set {cash} to random integer between 0.5 and 5
-      add {exp} to {exp::%uuid of attacker%}
-      add {cash} to {cash::%uuid of attacker%}
-      remove {cash} from {cash::%uuid of victim%}
-      remove {exp} from {exp::%uuid of victim%}
-      set attacker's health to attacker's health+3
-      send " " to attacker
-      send "You've killed &c&n%victim% and gained: " to attacker
-      send "Exp: &c%{exp}%" to attacker
-      send "Cash: &c%{cash}%" to attacker
-      send " " to attacker
-      send " " to victim
-      send "You got killed by &c&n%attacker% and lost: " to victim
-      send "Exp: &c%{exp}%" to victim
-      send "Cash: &c%{cash}%" to victim
-      send " " to victim
+
+
+function formatslot(p: player):
+  set {size.%{_p}%} to 0
+  loop 8 times:
+    set {size.%{_p}%} to {size.%{_p}%}+1
+    format slot {size.%{_p}%} of {_p} with gray glass named " " with lore " " to close then run [make console execute "hi"]
+  clear {size.%{_p}%}
+  set {size.%{_p}%} to 18
+  loop 8 times:
+    set {size.%{_p}%} to {size.%{_p}%}+1
+    format slot {size.%{_p}%} of {_p} with gray glass named " " with lore " " to close then run [make console execute "hi"]
+  wait 5 ticks
+  clear {size.%{_p}%}
+
+command /kits:
+  trigger:
+    open chest with 3 rows named "&a&lPUBLIC KITS" to player
+    wait 1 tick
+    formatslot(player)
+    format slot 0 of player with gray glass named " " with lore " " to close
+    format slot 18 of player with gray glass named " " with lore " " to close
+    wait 1 tick
+    format slot 9 of player with diamond sword named "&aCombat Basic Kit" with lore "&7A basic kit for" and "&7fun and casual combat." and "&2Left-Click to choose!" to close then run [make player execute "kit_pvp"]
+    format slot 10 of player with potion named "&aStrafe Kit" with lore "&7An advanced kit for", "&7fun and spiced combat.", "&2Speed Effect", " ", "&aCost: &7200&2$" and " " and "&eLeft-Click to buy/choose!" to close then run [make player execute "kit_strafe"]
+
+  
+
+
+# KIT EFFECTS #
+
+every second:
+  loop all players:
+    if {haskit.%loop-player's uuid%} is true:
+      if {kit.%loop-player's uuid%} is "strafe":
+        if loop-player doesn't have swiftness:
+          apply swiftness 2 to loop-player for 1 second
+
+on right click:
+  "%held item%" = "mushroom stew"
+
+  remove 1 mushroom stew from player
+  set player's health to player's health+2
+
+
+
+# KIT PVP #
+
+command /kit_pvp:
+  trigger:
+    if {haskit.%player's uuid%} is true:
+      send "&aYou're already in a kit!"
+    else:
+      set {haskit.%player's uuid%} to true
+      set {kit.%player's uuid%} to "pvp"
+      clear player's inventory
+      equip player with unbreakable iron helmet
+      equip player with unbreakable iron chestplate
+      equip player with unbreakable unbreakable iron leggings
+      equip player with unbreakable iron boots
+      set slot 0 of player to unbreakable diamond sword of sharpness 3 and knockback 2
+      set slot 1 of player to unbreakable bow
+      set slot 2 of player to 64 arrow
+      send "&aReady to battle!"
+
+# STRAFE #
+
+command /kit_strafe:
+  trigger:
+    if {haskit.%player's uuid%} is true:
+      send "&aYou're already in a kit!"
+    else:
+      if {kit.strafe.%player's uuid%} is not set:
+        if {cash::%player's uuid%} is greater than 199:
+          remove 200 from {cash::%player's uuid%}
+          send "&aSuccesfully purchased &7strafe&a kit!"
+          set {haskit.%player's uuid%} to true
+          set {kit.%player's uuid%} to "strafe"
+          set {kit.strafe.%player's uuid%} to true
+          clear player's inventory
+          equip player with unbreakable chain helmet
+          equip player with unbreakable iron chestplate
+          equip player with unbreakable unbreakable chain leggings
+          equip player with unbreakable chain boots
+          set slot 0 of player to unbreakable stone sword of sharpness 3 and knockback 2
+          set slot 1 of player to mushroom stew
+          set slot 2 of player to mushroom stew
+          newkit(player, "Strafe")
+
+          send "&aReady to battle!"
+        else:
+          set {_cash} to 200-{cash::%player's uuid%}
+          send "&eNot enought cash, %{_cash}% needed!"
+      if {kit.strafe.%player's uuid%} is true:
+        set {haskit.%player's uuid%} to true
+        set {kit.%player's uuid%} to "strafe"
+        set {kit.strafe.%player's uuid%} to true
+        clear player's inventory
+        equip player with unbreakable chain helmet
+        equip player with unbreakable iron chestplate
+        equip player with unbreakable unbreakable chain leggings
+        equip player with unbreakable chain boots
+        set slot 0 of player to unbreakable stone sword of sharpness 3
+        set slot 1 of player to mushroom stew
+        set slot 2 of player to mushroom stew
+        send "&aReady to battle!"

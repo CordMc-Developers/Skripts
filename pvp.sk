@@ -1,0 +1,228 @@
+
+# LEVEL SETUP #
+
+every second:
+  loop all players:
+
+    # LEVEL SETUP #
+
+    if {level::%loop-player's uuid%} is not set:
+      set {level::%loop-player's uuid%} to 1
+    
+     # EXPERIENCE SETUP #
+     
+    if {exp::%loop-player's uuid%} is not set:
+      set {exp::%loop-player's uuid%} to 0
+
+    # REQUIRED EXP #
+    set {rexp::%loop-player's uuid%} to {level::%loop-player's uuid%}*12
+    
+
+    # CHECKING LEVELUP #
+    
+    if {exp::%loop-player's uuid%} > {rexp::%loop-player's uuid%}:
+      set {exp::%loop-player's uuid%} to 0
+      {level::%loop-player's uuid%} is less than 50
+      add 1 to {level::%loop-player's uuid%}
+      broadcast "&7| &a%loop-player% &7has leveled up to &f&l%{level::%loop-player's uuid%}%&7!"
+    
+    # KILLS and DEATHS #
+    
+    if {kills::%loop-player's uuid%} is not set:
+      set {kills::%loop-player's uuid%} to 0
+    
+    if {deaths::%loop-player's uuid%} is not set:
+      set {deaths::%loop-player's uuid%} to 0
+
+
+    # TOP AND KILL STREAK #
+   
+    if {streak::%loop-player's uuid%} is not set:
+      set {streak::%loop-player's uuid%} to 0
+    
+    if {topstreak::%loop-player's uuid%} is not set:
+      set {topstreak::%loop-player's uuid%} to 0
+
+
+    # CASH #
+    
+    if {cash::%loop-player's uuid%} is not set:
+      set {cash::%loop-player's uuid%} to 0
+    
+   # PRESTIGE #
+   
+    if {prestige::%loop-player's uuid%} is not set:
+      set {prestige::%loop-player's uuid%} to 0
+
+
+   # COMBAT LOG #
+   
+    if {combatlog.%loop-player's uuid%} is not set:
+      set {combatlog.%loop-player's uuid%} to false
+
+    if {logtime.%loop-player's uuid%} is not set:
+      set {logtime.%loop-player's uuid%} to -1
+
+
+    # RANKS #
+    
+    if {level::%loop-player's uuid%} is between 1 and 4:
+      set {rank::%loop-player's uuid%} to "&8(Trainee)"
+
+    if {level::%loop-player's uuid%} is between 5 and 9:
+      set {rank::%loop-player's uuid%} to "&e(Trained)"
+
+    if {level::%loop-player's uuid%} is between 10 and 19:
+      set {rank::%loop-player's uuid%} to "&3(Professional)"
+
+    if {level::%loop-player's uuid%} is between 20 and 29:
+      set {rank::%loop-player's uuid%} to "&d(Expert)"
+
+    if {level::%loop-player's uuid%} is between 30 and 39:
+      set {rank::%loop-player's uuid%} to "&6(Extreme)"
+    
+    if {level::%loop-player's uuid%} is between 40 and 49:
+      set {rank::%loop-player's uuid%} to "&9(Master)"
+    
+    if {level::%loop-player's uuid%} is 50:
+   
+      set {rank::%loop-player's uuid%} to "&1&l(Cham&9&lion)"
+    
+    else if loop-player's prefix contains "premium":
+    
+      set {rank::%loop-player's uuid%} to "&c&lPREMIUM"
+
+
+
+
+
+
+
+
+
+
+
+# SMALL FIXES #
+
+on exp spawn:
+  cancel event
+
+command /adddeathmessage <text>:
+  permission: not.u
+  trigger:
+    add argument-1 to {deathmessages::*}
+
+command /clearmessages:
+  permission: not.u
+  trigger:
+    clear {deathmessages::*}
+
+on drop:
+  if player is not op:
+    cancel event
+
+
+# COMBATLOG #
+
+every second:
+  loop all players:
+    {combatlog.%loop-player's uuid%} is true
+    if {logtime.%loop-player's uuid%} is greater than 0:
+      remove 1 from {logtime.%loop-player's uuid%}
+    else if {logtime.%loop-player's uuid%} is 0:
+      set {combatlog.%loop-player's uuid%} to false
+      send "&7You have exited combat, you can now leave the arena with &a/exit&7." to loop-player
+
+
+# KILLING ENEMIES #
+
+
+on damage:
+  attacker is set
+  victim is online
+  (final damage) is greater than victim's health
+  cancel event
+  heal victim
+  teleport victim to {spawn}
+  add 1 to {deaths::%victim's uuid%}
+  add 1 to {kills::%attacker's uuid%}
+  add 1 to {streak::%attacker's uuid%}
+  set {_rnd} to random integer between 5 and 16
+  add {_rnd} to {cash::%attacker's uuid%}
+  clear victim's inventory
+  set {_rnd2} to random integer between 5 and 10
+  add {_rnd2} to {exp::%attacker's uuid%}
+  set {streak::%victim%} to 0
+  set {_msg} to random element out of {deathmessages::*}
+  set {combatlog.%victim's uuid%} to false
+  set {logtime.%victim's uuid%} to -1
+  clear {kit.%victim's uuid%}
+  clear {haskit.%victim's uuid%}
+  clear {streak::%victim's uuid%}
+  broadcast "&7｜ &a%victim% &7%{_msg}% &f&l%attacker%&7!"
+  remove speed from victim
+  remove invisibility from victim
+  remove jump boost from victim
+  remove levitation from victim
+  send "&7Combat stats:" to victim
+  send "&c[%attacker's health% hearts]" to victim
+  send "&aBetter luck next time!" to victim
+  send "&aKilled &7%victim%&7:" to attacker
+  send "&a%{_rnd}%&2$ &7cash earned!" to attacker
+  send "&a%{_rnd2}% &7EXP earned!" to attacker
+  send "&a%{streak::%attacker's uuid%}% &7streak!" to attacker
+
+on damage:
+  create hologram "&c-%damage%" at block above victim for 0.5 seconds
+  if {combatlog.%attacker's uuid%} is false:
+    if {combatlog.%victim's uuid%} is false:
+      set {combatlog.%attacker's uuid%} to true
+      set {logtime.%attacker's uuid%} to 60
+      send "You're in combat, wait 60 seconds to exit combat with &c/exit&f." to attacker
+      set {combatlog.%victim's uuid%} to true
+      set {logtime.%victim's uuid%} to 60
+      send "You're in combat, wait 60 seconds to exit combat with &c/exit&f." to victim
+  else:
+    set {logtime.%victim's uuid%} to 60
+    set {logtime.%attacker's uuid%} to 60
+
+on death:
+  victim is online
+  teleport victim to {spawn}
+  add 1 to {deaths::%victim's uuid%}
+  add 1 to {kills::%attacker's uuid%}
+  add 1 to {streak::%attacker's uuid%}
+  set {_rnd} to random integer between 5 and 16
+  add {_rnd} to {cash::%attacker's uuid%}
+  clear victim's inventory
+  set {_rnd2} to random integer between 5 and 10
+  add {_rnd2} to {exp::%attacker's uuid%}
+  set {streak::%victim%} to 0
+  clear {kit.%victim's uuid%}
+  clear {haskit.%victim's uuid%}
+  clear {streak::%victim's uuid%}
+  set {_msg} to random element out of {deathmessages::*}
+  broadcast "&7｜ &a%victim% &7%{_msg}% &f&l%attacker%&7!"
+  set {combatlog.%victim's uuid%} to false
+  set {logtime.%victim's uuid%} to -1
+  remove speed from victim
+  remove invisibility from victim
+  remove jump boost from victim
+  remove levitation from victim
+  send "&7Combat stats:" to victim
+  send "&c[%attacker's health% hearts]" to victim
+  send "&aBetter luck next time!" to victim
+  send "&aKilled &7%victim%&7:" to attacker
+  send "&a%{_rnd}%&2$ &7cash earned!" to attacker
+  send "&a%{_rnd2}% &7EXP earned!" to attacker
+  send "&a%{streak::%attacker's uuid%}% &7streak!" to attacker
+
+on respawn:
+  teleport player to {spawn}
+
+
+
+
+
+
+

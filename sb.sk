@@ -1,0 +1,103 @@
+
+# SCOREBOARD #
+
+every second:
+  loop all players:
+    wipe loop-player's sidebar  
+    set name of sidebar of loop-player to "&8｜ &a&LCOMBAT &8｜"
+    set score "  &7Enhanced Combat" in sidebar of loop-player to 9
+    set score "" in sidebar of loop-player to 8
+    set score "&2Daily Goal:" in sidebar of loop-player to 7
+    set score "  &fKill 50 players &7(&a<>&7/&2<>&7)" in sidebar of loop-player to 6
+    set score "  &7Reward: &2100+ Points" in sidebar of loop-player to 5
+    set score "  &7Time Remaining:" in sidebar of loop-player to 4
+    set score "  %difference between {daily.%loop-player's uuid%::end} and now%" in sidebar of loop-player to 3
+
+     
+    set score " " in sidebar of loop-player to 0
+
+
+every second:
+  loop all players:
+    if difference between {daily.%loop-player's uuid%::end} and now is greater than  seconds:
+
+
+
+command /dailychallenge <player>:
+  permission: not.you
+  trigger:
+    set {daily.%player's uuid%::type} to "kill"
+    set {daily.%player's uuid%::amount} to 50
+    set {daily.%player's uuid%::time} to now
+    set {daily.%player's uuid%::score} to 0  
+    broadcast "&aUpdated daily values for %player%"
+    broadcast "type: %{daily.%player's uuid%::type}%"
+    broadcast "amount: %{daily.%player's uuid%::amount}%"
+    broadcast "time started: %{daily.%player's uuid%::time}%"
+    set {_t} to {daily.%player's uuid%::time}
+    add 24 hours to {_t}
+    set {daily.%player's uuid%::end} to {_t} 
+    broadcast "time end: %{_t}%"
+
+
+    
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# LEADERBOARD #
+
+every 1 minute:
+  make console execute "top10"
+
+command /top10:
+	trigger:
+		loop {kills::*}:
+			add 1 to {_size}
+			if {_low.to.high.list::%loop-value%} is not set:
+				set {_low.to.high.list::%loop-value%} to loop-index
+			else:
+				set {_n} to 0
+				loop {_size} times:
+					set {_n} to {_n}+1
+					{_low.to.high.list::%loop-value-1%.%{_n}%} is not set
+					set {_low.to.high.list::%loop-value-1%.%{_n}%} to loop-index
+					stop loop
+		wait 1 tick
+		set {_n} to size of {_low.to.high.list::*}
+		loop {_low.to.high.list::*}:
+			set {_high.to.low.list::%{_n}%} to loop-value
+			set {_n} to {_n}-1
+		wait 1 tick
+		set {_result} to 4
+		loop {_high.to.low.list::*}:
+			add 1 to {_result}
+			make console execute "holo setline leader %{_result}% &2%{_result}-4%. &a%Loop-value parsed as offline player% &7 %{kills::%loop-value%}%"
+			if {_result} is 14:
+				stop

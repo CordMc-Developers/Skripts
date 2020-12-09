@@ -1,0 +1,145 @@
+# Combat - New Day Update #
+# Redesigned Core - UUID Support #
+# Please do not distribute. #
+
+# ECO #
+command /pay [<offlineplayer>] [<integer>]:
+	trigger:
+		if argument 1 is set:
+			if argument 2 is set:
+				if {cash::%player's uuid%} is greater than or equal to argument-2:
+					if argument-2 is greater than 0:
+						remove argument-2 from {cash::%player's uuid%}
+						add argument 2 to {cash::%argument-1's uuid%}
+						send "&b$%argument-2% &ahas been taken from your account." to player
+						send "&b$%argument-2% &ahas been added to your account by &b&l%player%&a." to argument-1
+						play sound "entity.experience_orb.pickup" with volume 100 and pitch 0 at argument-1 for player
+						play sound "entity.experience_orb.pickup" with volume 100 and pitch 0 at player for player
+						if arg-2 >= 100:
+							log "%player% paid %arg-1% %arg-2%" to "economy/payments.log"
+					else:
+						send "&cThe minimum amount you can pay is $1.0" to player
+						play sound "entity.villager.no" with volume 100 and pitch 0 at player for player
+		else:
+			send "Pays another player from your balance."
+			send "/pay <player> <amount>"
+			stop
+
+command /economy [<text>] [<offlineplayer>] [<integer>]:
+	permission: command.economy
+	aliases: /eco
+	trigger:
+		if argument 1 is "add":
+			if player has permission "balance.add" or "balance.*":
+				if argument-3 is greater than 0:
+					add argument 3 to {cash::%argument-2's uuid%}
+					send "&a$%argument 3% received from &b%player%" to argument 2
+		else if argument 1 is "remove":
+			if player has permission "balance.remove" or "balance.*":
+				if argument-3 is greater than 0:
+					if argument-3 is less than or equal to {cash::%argument-2's uuid%}:
+						remove argument-3 from {cash::%argument-2's uuid%}
+		else if argument 1 is "set":
+			if player has permission "balance.set" or "balance.*":
+				set {cash::%argument 2's uuid%} to argument 3
+		else if argument 1 is "balance":
+			if player has permission "balance.see.others" or "balance.*":
+				send "&c%argument-2% has $%{cash::%argument-2's uuid%}% cash."
+		else:
+			send "Manage the server economy."
+			send "/economy <add|remove|set> <player> <amount>"
+			stop
+
+
+on script load:
+  broadcast "&a&lCOMBAT &8| &7Main core is under reloading progress, version 2.0ND"
+
+# FIXES #
+
+on hunger meter change:
+  set the player's food level to 10
+
+
+
+
+
+# /spawn #
+
+command spawn [<player>]:
+  permission: spawn.use
+  trigger:
+    if arg-1 is not set:
+      teleport player to {spawn}
+      send "&aTeleporting you to spawn!"
+    else:
+      teleport arg-1 to {spawn}
+      send "&aTeleporting %arg-1% to spawn!"
+
+command setspawn:
+  permission: setspawn.use
+  trigger:
+    set {spawn} to location of player
+    broadcast "&a&lCOMBAT &8| &7The value spawn has been updated to %{spawn}%."
+
+
+# Chat settings #
+
+on chat:
+  loop all players:
+    if message contains "%loop-player%":
+      replace every "%loop-player%" in message with "&d&o@%loop-player%&r"
+  set chat format to "&a[%{level::%player's uuid%}%&a] %{rank::%player's uuid%}% &7%player% %player's suffix% &7: &f%message%"
+
+
+
+# Leaving from spawn #
+
+on region leave:
+  player doesn't have permission "arena.enter"
+  if "%region at player%" contains "spawn":
+    if {kit.%player's uuid%} is not set:
+      cancel event
+      send "&aSelect a kit before jumpping off!"
+      push player backwards at speed 0.5
+
+# Join & Disconnect #
+
+on join:
+  teleport player to {spawn}
+  send "&7Welcome back %player% to &a&lCOMBAT&7!"
+  set join message to "&7%player% has &ajoined&7."
+
+on disconnect:
+  clear {kit.%player's uuid%}
+  set {haskit.%player's uuid%} to false
+  clear {clog.%player's uuid%}
+  clear player's inventory
+  set leave message to "&7%player% has &aleft&7." 
+
+
+# /exit #
+
+command /exit:
+  trigger:
+    if {combatlog.%player's uuid%} is false:
+      clear player's inventory 
+      clear {kit.%player's uuid%}
+      set {haskit.%player's uuid%} to false
+      teleport player to {spawn}
+      send "&aSuccesfully exited combat."
+    else:
+      send "&aYou're in combat, wait till you get out of it!"
+
+# TABLIST #
+
+every second:
+  loop all players:
+    set loop-player's tablist name to "&a[%{level::%loop-player's uuid%}%&a] %{rank::%loop-player's uuid%}% &7%loop-player% %loop-player's suffix%"
+    set tab header to "%nl%&8| &a&lCOMBAT &8|%nl%%nl%&7Enhanced Combat%nl%%nl%&f%loop-player%, you're playing FFA on combat.%nl%A server heading for your enjoyment.%nl%&7Check us out at &a/discord&7!%nl%%nl%" and footer to "%nl%&c&lPREMIUM &7packages now available.%nl%" for loop-player
+
+
+    
+  
+
+
+
